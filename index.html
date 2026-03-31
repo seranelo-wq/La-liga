@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>LaLiga - Jornadas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            padding: 16px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .selector-group {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+        }
+        select, input, button {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        button {
+            background: #3b82f6;
+            border: none;
+            cursor: pointer;
+        }
+        button:active { background: #2563eb; }
+        .widget-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .widget-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-left: 8px;
+            border-left: 4px solid #ffd700;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        th, td {
+            padding: 10px 6px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th { text-align: left; background: rgba(59,130,246,0.2); }
+        td:first-child, th:first-child { text-align: left; }
+        .team-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .team-logo {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        .row-champion { background: rgba(255,215,0,0.15); border-left: 3px solid #ffd700; }
+        .row-champions { background: rgba(59,130,246,0.15); border-left: 3px solid #3b82f6; }
+        .row-europa { background: rgba(34,197,94,0.15); border-left: 3px solid #22c55e; }
+        .row-relegation { background: rgba(239,68,68,0.15); border-left: 3px solid #ef4444; }
+        .scorers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .scorer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+        }
+        .scorer-rank {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1a1f2e;
+        }
+        .scorer-info { flex: 1; }
+        .scorer-name { font-weight: 600; }
+        .scorer-team { font-size: 0.7rem; color: #9ca3af; }
+        .scorer-goals { font-size: 1.3rem; font-weight: bold; color: #ffd700; }
+        .matches-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .match-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 12px;
+        }
+        .match-teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .team-home, .team-away {
+            flex: 1;
+            text-align: center;
+            font-weight: 500;
+        }
+        .match-score {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffd700;
+            min-width: 50px;
+            text-align: center;
+        }
+        .match-status {
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 8px;
+            color: #9ca3af;
+        }
+        .status-live { color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .error {
+            background: rgba(239,68,68,0.2);
+            border: 1px solid #ef4444;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            color: #fecaca;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #9ca3af;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            th, td { padding: 6px 3px; font-size: 0.7rem; }
+            .team-logo { width: 18px; height: 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏆 LaLiga EA Sports</h1>
+
+    <!-- Selectores -->
+    <div class="selector-group">
+        <label>Temporada:</label>
+        <select id="seasonSelect">
+            <option value="2025">2025-2026 (actual)</option>
+            <option value="2024">2024-2025 (anterior)</option>
+        </select>
+        <button id="applySeason">Cargar</button>
+    </div>
+
+    <div class="widget-card">
+        <div class="widget-title">📊 Clasificación</div>
+        <div id="standingsContainer" class="loading">Cargando...</div>
+    </div>
+
+    <div class="widget-card">
+        <div class="widget-title">⚽ Máximos goleadores</div>
+        <div id="scorersContainer" class="loading">Cargando...</div>
+    </div>
+
+    <div class="widget-card">
+        <div class="widget-title">📅 Partidos por jornada</div>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+            <label>Jornada:</label>
+            <input type="number" id="roundInput" min="1" max="38" value="1" style="width: 80px;">
+            <button id="loadRound">Ver jornada</button>
+        </div>
+        <div id="fixturesContainer" class="loading">Selecciona una jornada</div>
+    </div>
+
+    <footer>Datos: API-Football | Si la temporada 2025/26 no muestra datos, usa la 2024/25 hasta que se actualice.</footer>
+</div>
+
+<script>
+    // Configuración
+    const API_KEY = '3c7584e846c9f6032991e70aef8e5ae4';
+    const BASE_URL = 'https://v3.football.api-sports.io';
+    const LEAGUE_ID = 140;
+
+    let currentSeason = 2025; // temporada seleccionada
+    let currentRound = 1;      // jornada seleccionada
+
+    // Elementos
+    const seasonSelect = document.getElementById('seasonSelect');
+    const applySeasonBtn = document.getElementById('applySeason');
+    const roundInput = document.getElementById('roundInput');
+    const loadRoundBtn = document.getElementById('loadRound');
+    const standingsDiv = document.getElementById('standingsContainer');
+    const scorersDiv = document.getElementById('scorersContainer');
+    const fixturesDiv = document.getElementById('fixturesContainer');
+
+    // Helper: petición a la API
+    async function fetchAPI(endpoint, params = {}) {
+        const query = new URLSearchParams(params).toString();
+        const url = `${BASE_URL}/${endpoint}?${query}`;
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'x-apisports-key': API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    // Cargar clasificación
+    async function loadStandings() {
+        standingsDiv.innerHTML = '<div class="loading">Cargando clasificación...</div>';
+        try {
+            const data = await fetchAPI('standings', { league: LEAGUE_ID, season: currentSeason });
+            const standingsArray = data?.response?.[0]?.league?.standings?.[0];
+            if (!standingsArray || standingsArray.length === 0) {
+                standingsDiv.innerHTML = '<div class="error">No hay datos de clasificación para esta temporada.</div>';
+                return;
+            }
+            // Renderizar tabla
+            let html = '<table><thead><tr><th>Pos</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>Pts</th></tr></thead><tbody>';
+            standingsArray.forEach(team => {
+                let rowClass = '';
+                if (team.rank === 1) rowClass = 'row-champion';
+                else if (team.rank >= 2 && team.rank <= 4) rowClass = 'row-champions';
+                else if (team.rank >= 5 && team.rank <= 6) rowClass = 'row-europa';
+                else if (team.rank >= 18) rowClass = 'row-relegation';
+                html += `<tr class="${rowClass}">
+                            <td><strong>${team.rank}</strong></td>
+                            <td><div class="team-name">${team.team.logo ? `<img src="${team.team.logo}" class="team-logo" onerror="this.style.display='none'">` : ''}${team.team.name}</div></td>
+                            <td>${team.all.played}</td>
+                            <td>${team.all.win}</td>
+                            <td>${team.all.draw}</td>
+                            <td>${team.all.lose}</td>
+                            <td>${team.all.goals.for}</td>
+                            <td>${team.all.goals.against}</td>
+                            <td><strong>${team.points}</strong></td>
+                         </tr>`;
+            });
+            html += '</tbody></table>';
+            standingsDiv.innerHTML = html;
+        } catch (err) {
+            standingsDiv.innerHTML = `<div class="error">Error al cargar clasificación: ${err.message}</div>`;
+        }
+    }
+
+    // Cargar goleadores
+    async function loadTopScorers() {
+        scorersDiv.innerHTML = '<div class="loading">Cargando goleadores...</div>';
+        try {
+            const data = await fetchAPI('players/topscorers', { league: LEAGUE_ID, season: currentSeason });
+            const scorers = data?.response;
+            if (!scorers || scorers.length === 0) {
+                scorersDiv.innerHTML = '<div class="error">No hay datos de goleadores para esta temporada.</div>';
+                return;
+            }
+            const top10 = scorers.slice(0, 10);
+            let html = '<div class="scorers-list">';
+            top10.forEach((s, idx) => {
+                const player = s.player;
+                const stats = s.statistics[0];
+                const team = stats.team;
+                const goals = stats.goals.total || 0;
+                html += `<div class="scorer-item">
+                            <div class="scorer-rank">${idx+1}</div>
+                            <div class="scorer-info">
+                                <div class="scorer-name">${player.name}</div>
+                                <div class="scorer-team">${team.name}</div>
+                            </div>
+                            <div class="scorer-goals">${goals}</div>
+                         </div>`;
+            });
+            html += '</div>';
+            scorersDiv.innerHTML = html;
+        } catch (err) {
+            scorersDiv.innerHTML = `<div class="error">Error al cargar goleadores: ${err.message}</div>`;
+        }
+    }
+
+    // Cargar partidos de una jornada
+    async function loadFixtures(round) {
+        fixturesDiv.innerHTML = '<div class="loading">Cargando partidos...</div>';
+        try {
+            // Usamos el parámetro "round" en lugar de "date"
+            const data = await fetchAPI('fixtures', { league: LEAGUE_ID, season: currentSeason, round: `Regular Season - ${round}` });
+            const matches = data?.response;
+            if (!matches || matches.length === 0) {
+                fixturesDiv.innerHTML = '<div class="error">No hay partidos para esta jornada.</div>';
+                return;
+            }
+            let html = '<div class="matches-grid">';
+            matches.forEach(m => {
+                const home = m.teams.home;
+                const away = m.teams.away;
+                const status = m.fixture.status;
+                const goals = m.goals;
+                let score = '-', statusText = '', statusClass = '';
+                if (status.short === 'FT') {
+                    score = `${goals.home ?? 0} - ${goals.away ?? 0}`;
+                    statusText = '✅ Finalizado';
+                } else if (['1H','2H','HT','ET','P'].includes(status.short)) {
+                    score = `${goals.home ?? 0} - ${goals.away ?? 0}`;
+                    statusText = `🟢 EN VIVO ${status.elapsed ? status.elapsed+"'" : ''}`;
+                    statusClass = 'status-live';
+                } else if (status.short === 'NS') {
+                    score = '-';
+                    const matchTime = m.fixture.date.split('T')[1].slice(0,5);
+                    statusText = `⏰ ${matchTime}`;
+                } else {
+                    statusText = status.short;
+                }
+                html += `<div class="match-card">
+                            <div class="match-teams">
+                                <div class="team-home">${home.name}</div>
+                                <div class="match-score">${score}</div>
+                                <div class="team-away">${away.name}</div>
+                            </div>
+                            <div class="match-status ${statusClass}">${statusText}</div>
+                         </div>`;
+            });
+            html += '</div>';
+            fixturesDiv.innerHTML = html;
+        } catch (err) {
+            fixturesDiv.innerHTML = `<div class="error">Error al cargar partidos: ${err.message}</div>`;
+        }
+    }
+
+    // Recargar todo después de cambiar temporada
+    async function refreshAll() {
+        await loadStandings();
+        await loadTopScorers();
+        // También recargar la jornada actual
+        if (currentRound) {
+            await loadFixtures(currentRound);
+        }
+    }
+
+    // Eventos
+    applySeasonBtn.addEventListener('click', () => {
+        currentSeason = parseInt(seasonSelect.value);
+        refreshAll();
+    });
+
+    loadRoundBtn.addEventListener('click', () => {
+        let round = parseInt(roundInput.value);
+        if (isNaN(round)) round = 1;
+        if (round < 1) round = 1;
+        if (round > 38) round = 38;
+        currentRound = round;
+        roundInput.value = round;
+        loadFixtures(currentRound);
+    });
+
+    // Inicializar
+    refreshAll();
+</script>
+</body>
+</html>
