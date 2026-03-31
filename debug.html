@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico API LaLiga</title>
+    <style>
+        body { font-family: system-ui; background: #0f0f1a; color: white; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { color: gold; }
+        .result { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px; overflow-x: auto; }
+        pre { white-space: pre-wrap; font-size: 12px; }
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔍 Diagnóstico API LaLiga</h1>
+    <p>Comprobando temporadas 2025 (actual) y 2024 (anterior)...</p>
+
+    <div id="result2025" class="result">Cargando temporada 2025...</div>
+    <div id="result2024" class="result">Cargando temporada 2024...</div>
+
+    <p>Si la temporada 2025 aparece vacía, significa que la API aún no ha cargado los datos de la temporada 2025-2026. 
+    En ese caso, puedes usar la temporada 2024-2025 mientras esperas la actualización.</p>
+</div>
+
+<script>
+    const API_KEY = '3c7584e846c9f6032991e70aef8e5ae4';
+    const LEAGUE_ID = 140;
+
+    async function checkSeason(season) {
+        const url = `https://v3.football.api-sports.io/standings?league=${LEAGUE_ID}&season=${season}`;
+        try {
+            const response = await fetch(url, {
+                headers: { 'x-apisports-key': API_KEY }
+            });
+            const data = await response.json();
+            const standings = data?.response?.[0]?.league?.standings?.[0];
+            const hasData = standings && standings.length > 0;
+            const firstTeam = hasData ? standings[0].team.name : 'No hay datos';
+            return { hasData, firstTeam, data };
+        } catch (err) {
+            return { hasData: false, error: err.message };
+        }
+    }
+
+    async function run() {
+        // 2025
+        const season2025 = await checkSeason(2025);
+        const div2025 = document.getElementById('result2025');
+        if (season2025.hasData) {
+            div2025.innerHTML = `<span class="success">✅ Temporada 2025 SÍ tiene datos.</span><br>Primer equipo: ${season2025.firstTeam}<br><pre>${JSON.stringify(season2025.data, null, 2)}</pre>`;
+        } else if (season2025.error) {
+            div2025.innerHTML = `<span class="error">❌ Error en temporada 2025: ${season2025.error}</span>`;
+        } else {
+            div2025.innerHTML = `<span class="error">⚠️ Temporada 2025 NO tiene datos (array vacío).</span><br><pre>${JSON.stringify(season2025.data, null, 2)}</pre>`;
+        }
+
+        // 2024
+        const season2024 = await checkSeason(2024);
+        const div2024 = document.getElementById('result2024');
+        if (season2024.hasData) {
+            div2024.innerHTML = `<span class="success">✅ Temporada 2024 SÍ tiene datos.</span><br>Primer equipo: ${season2024.firstTeam}<br><pre>${JSON.stringify(season2024.data, null, 2)}</pre>`;
+        } else if (season2024.error) {
+            div2024.innerHTML = `<span class="error">❌ Error en temporada 2024: ${season2024.error}</span>`;
+        } else {
+            div2024.innerHTML = `<span class="error">⚠️ Temporada 2024 NO tiene datos (array vacío).</span>`;
+        }
+    }
+
+    run();
+</script>
+</body>
+</html>
